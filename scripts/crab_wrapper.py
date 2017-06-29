@@ -5,6 +5,7 @@ import subprocess
 import os
 
 # import run script
+
 from DevTools.Analyzer.runAnalysis import runAnalysis
 
 def parse_command_line(argv):
