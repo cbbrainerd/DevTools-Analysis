@@ -13,7 +13,7 @@ from DevTools.Plotter.utilities import getNtupleDirectory as getAnalysisNtupleDi
 from DevTools.Plotter.utilities import getTreeName
 from DevTools.Plotter.xsec import getXsec
 from DevTools.Plotter.utilities import getLumi, isData
-from DevTools.Utilities.utilities import getCMSSWVersion, get_hdfs_root_files
+from DevTools.Utilities.utilities import getCMSSWVersion, get_hdfs_root_files, hdfs_ls_directory
 
 log = logging.getLogger("submit_job")
 logging.basicConfig(level=logging.INFO, stream=sys.stderr)
@@ -45,14 +45,17 @@ def main(argv=None):
     table.align = 'r'
     table.align['Sample'] = 'l'
 
-    ntupleDir = getAnalysisNtupleDirectory(args.analysis) if args.verbose and args.analysis else getNtupleDirectory(version=args.version)
+    ntupleDir = getAnalysisNtupleDirectory(args.analysis,True) if args.verbose and args.analysis else getNtupleDirectory(version=args.version)
 
-    for sample in sorted(glob.glob(os.path.join(ntupleDir,'*'))):
+    #Odd mix of local pathnames and xrootd access
+#    for sample in sorted(hdfs_ls_directory(ntupleDir)):
+    for sample in (glob.glob('/'.join([ntupleDir,'*']))):
         name = os.path.basename(sample)
         logging.info('Processing {0}'.format(name))
         data = isData(name)
         xsec = getXsec(name)
         if args.verbose and args.analysis:
+            print sample
             fnames = get_hdfs_root_files(sample)
             # get total events, total weights
             tree = ROOT.TChain(getTreeName(args.analysis))

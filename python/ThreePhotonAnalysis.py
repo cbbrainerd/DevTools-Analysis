@@ -14,6 +14,8 @@ import operator
 
 import ROOT
 
+import random
+
 logger = logging.getLogger("ThreePhotonAnalysis")
 logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(asctime)s.%(msecs)03d %(levelname)s %(name)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -23,6 +25,7 @@ class ThreePhotonAnalysis(AnalysisBase):
     '''
 
     def __init__(self,**kwargs):
+        self.random=random.SystemRandom()
         outputFileName = kwargs.pop('outputFileName','threePhotonTree.root')
         outputTreeName = kwargs.pop('outputTreeName','ThreePhotonTree')
         super(ThreePhotonAnalysis, self).__init__(outputFileName=outputFileName,outputTreeName=outputTreeName,**kwargs)
@@ -76,24 +79,41 @@ class ThreePhotonAnalysis(AnalysisBase):
             #'dijet': DiCandidate(Candidate(None),Candidate(None)),
         }
 
-        gs = self.getPassingCands('ElectronVeto',self.photons)
+        gs = self.getPassingCands('PassAny',self.photons)
+
+        if len(gs)<3:
+            return candidate
 
         best = ()
 
-        for gCand in itertools.permutations(gs,3):
-            g1, g2, g3 = gCand
-            if not (g1.pt()>g2.pt() and g2.pt()>g3.pt()): continue
-            if g1.pt()<32: continue
-            if g2.pt()<20: continue
-            if not self.passPhotonPreselection(g1): continue
-            if not self.passPhotonPreselection(g2): continue
-            if not best: best = gCand
-            if g1.pt()>best[0].pt():
-                best = gCand
-            elif g1.pt()==best[0].pt() and g2.pt()>best[1].pt():
-                best = gCand
-            elif g1.pt()==best[0].pt() and g2.pt()==best[1].pt() and g3.pt()>best[2].pt():
-                best = gCand
+        #More efficient than calculating all permutations
+        #Compute max pt of any particle in gs
+        maxPt=max([x.pt() for x in gs])
+        #Sort by pt, but with those passing preselection first
+        #Random ordering of photon candidates to give unbiased(-ish) samples
+        gs.sort(reverse=False,key=lambda x:self.random.random())
+       
+        #Require leading pt >= 32, subleading pt >= 20, photon preselection on subleading (and thus implicitly on leading) photon
+#        if gs[0].pt()<32 or gs[1].pt()<20: # or not self.passPhotonPreselection(gs[1]):
+        if False:
+            best=()
+        else:
+            best=gs[0:3]
+
+#        for gCand in itertools.permutations(gs,3):
+#            g1, g2, g3 = gCand
+#            if not (g1.pt()>g2.pt() and g2.pt()>g3.pt()): continue
+#            if g1.pt()<32: continue
+#            if g2.pt()<20: continue
+#            if not self.passPhotonPreselection(g1): continue
+#            if not self.passPhotonPreselection(g2): continue
+#            if not best: best = gCand
+#            if g1.pt()>best[0].pt():
+#                best = gCand
+#            elif g1.pt()==best[0].pt() and g2.pt()>best[1].pt():
+#                best = gCand
+#            elif g1.pt()==best[0].pt() and g2.pt()==best[1].pt() and g3.pt()>best[2].pt():
+#                best = gCand
             
 
         if not best: return candidate

@@ -330,10 +330,11 @@ class AnalysisBase(object):
         return False
 
     def getCands(self,coll,func):
-        cands = []
-        for cand in coll:
-            if func(cand): cands += [cand]
-        return cands
+        return filter(func,coll)
+#        cands = []
+#        for cand in coll:
+#            if func(cand): cands += [cand]
+#        return cands
 
     def cleanCands(self,src,other,dr):
         cleaned = []
@@ -421,6 +422,9 @@ class AnalysisBase(object):
     def passPhotonPreselection(self,cand):
         return passPreselection(cand)
 
+    def passAny(self,cand):
+        return True
+
     def passPhotonPreselectionNoElectronVeto(self,cand):
         return passPreselectionNoElectronVeto(cand)
 
@@ -459,6 +463,7 @@ class AnalysisBase(object):
         elif mode=='ElectronVeto': passMode = self.passElectronVeto
         elif mode=='PhotonPreselection': passMode = self.passPhotonPreselection
         elif mode=='PhotonPreselectionNoElectronVeto': passMode = self.passPhotonPreselectionNoElectronVeto
+        elif mode=='PassAny' : passMode = self.passAny
         else: return []
         cands = []
         for coll in colls:
