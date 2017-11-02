@@ -7,7 +7,7 @@ def passPhoton(photon,version='80X'):
 
 def passPreselectionNoElectronVeto(photon,version='80X'):
     if photon.pt()<10: return False
-    if photon.eta()>2.5: return False
+    if abs(photon.eta())>2.5: return False
     # selections to match the online trigger requirements
     if photon.hadronicOverEM()>=0.08: return False
     if photon.isEB():
